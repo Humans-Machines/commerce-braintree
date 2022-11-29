@@ -130,7 +130,7 @@ class PaymentResponse implements RequestResponseInterface
     {
         throw new NotImplementedException('Redirecting directly is not implemented for this gateway.');
 	}
-	
+
 
 	private function transactionValue($key): string
 	{
