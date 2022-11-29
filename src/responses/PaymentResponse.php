@@ -19,7 +19,7 @@ class PaymentResponse implements RequestResponseInterface
     /**
      * @var
      */
-    protected array $data = [];
+    protected $data = null;
     /**
      * @var string
      */
@@ -33,7 +33,7 @@ class PaymentResponse implements RequestResponseInterface
      *
      * @param $data
      */
-    public function __construct(array $data)
+    public function __construct($data)
     {
         $this->data = $data;
     }
