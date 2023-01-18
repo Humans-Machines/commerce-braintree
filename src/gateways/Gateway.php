@@ -466,12 +466,12 @@ class Gateway extends BaseGateway
 			];
 
 			if ($order->user) {
-				if ($this->getCustomer($order->user)) {
-					$data['customerId'] = $order->user->uid;
+				if ($this->getCustomer($order->getCustomer())) {
+					$data['customerId'] = $order->getCustomer()->uid;
 				} else {
 					$data['customer'] = [
-						'firstName' => $order->user->firstName,
-						'lastName' => $order->user->lastName,
+						'firstName' => $order->getCustomer()->firstName,
+						'lastName' => $order->getCustomer()->lastName,
 						'email' => $order->email,
 					];
 				}
