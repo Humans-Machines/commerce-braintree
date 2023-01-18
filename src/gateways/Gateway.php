@@ -95,9 +95,9 @@ class Gateway extends BaseGateway
 	private ?Braintree\Gateway $gateway = null;
 
 	private ?User $customer = null;
-	
+
 	private string $_dropinUiSDKVersion = '1.34.0';
-	
+
 	private string $_clientSDKVersion = '3.91.0';
 
 	// Public Methods
@@ -124,8 +124,8 @@ class Gateway extends BaseGateway
 	{
 		return Craft::t('commerce', 'Braintree');
 	}
-	
-	
+
+
 	public function getSettings(): array
 	{
 		$settings = parent::getSettings();
@@ -137,57 +137,57 @@ class Gateway extends BaseGateway
 		$settings['googlePayMerchantId'] = $this->getGooglePayMerchantId(false);
 		$settings['dropinUiSDKVersion'] = $this->getDropinUiSDKVersion(false);
 		$settings['clientSDKVersion'] = $this->getClientSDKVersion(false);
-		
+
 		return $settings;
 	}
-	
-	
-	
-	
+
+
+
+
 	public function getTestMode(bool $parse = true): bool|string
 	{
 		return $parse ? App::parseBooleanEnv($this->_testMode) : $this->_testMode;
 	}
-	
+
 	public function setTestMode(bool|string $testMode): void
 	{
 		$this->_testMode = $testMode;
 	}
-	
-	
+
+
 	public function getMerchantId(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_merchantId) : $this->_merchantId;
 	}
-	
+
 	public function setMerchantId(?string $merchantId): void
 	{
 		$this->_merchantId = $merchantId;
 	}
-	
-	
+
+
 	public function getPublicKey(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_publicKey) : $this->_publicKey;
 	}
-	
+
 	public function setPublicKey(?string $publicKey): void
 	{
 		$this->_publicKey = $publicKey;
 	}
-	
-	
+
+
 	public function getPrivateKey(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_privateKey) : $this->_privateKey;
 	}
-	
+
 	public function setPrivateKey(?string $privateKey): void
 	{
 		$this->_privateKey = $privateKey;
 	}
-	
-	
+
+
 	public function getMerchantAccountId(string $currency, bool $parse = true): ?string
 	{
 		if (empty($this->_merchantAccountIds[$currency])) {
@@ -195,52 +195,52 @@ class Gateway extends BaseGateway
 		}
 		return $parse ? App::parseEnv($this->_merchantAccountIds[$currency]) : $this->_merchantAccountIds[$currency];
 	}
-	
+
 	public function setMerchantAccountId(string $currency, ?string $merchantAccountId): void
 	{
 		$this->_merchantAccountIds[$currency] = $merchantAccountId;
 	}
-	
+
 	public function setMerchantAccountIds(array $merchantAccountIds): void
 	{
 		$this->_merchantAccountIds = $merchantAccountIds;
 	}
-	
-	
+
+
 	public function getGooglePayMerchantId(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_googlePayMerchantId) : $this->_googlePayMerchantId;
 	}
-	
+
 	public function setGooglePayMerchantId(?string $googlePayMerchantId): void
 	{
 		$this->_googlePayMerchantId = $googlePayMerchantId;
 	}
-	
-	
+
+
 	public function getDropinUiSDKVersion(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_dropinUiSDKVersion) : $this->_dropinUiSDKVersion;
 	}
-	
+
 	public function setDropinUiSDKVersion(?string $version): void
 	{
 		$this->_dropinUiSDKVersion = $version;
 	}
-	
+
 	public function getClientSDKVersion(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_clientSDKVersion) : $this->_clientSDKVersion;
 	}
-	
+
 	public function setClientSDKVersion(?string $version): void
 	{
 		$this->_clientSDKVersion = $version;
 	}
-	
-	
-	
-	
+
+
+
+
 
 	/**
 	 * @inheritdoc
@@ -260,7 +260,7 @@ class Gateway extends BaseGateway
 	{
 		//$omnipayGateway = $this->createGateway();
 		$params = [];
-		
+
 		if ($currency) {
 			$params['merchantAccountId'] = $this->getMerchantAccountId($currency);
 		}
@@ -494,13 +494,13 @@ class Gateway extends BaseGateway
 				'options' => ['submitForSettlement' => true],
 			];
 
-			if ($order->customer) {
-				if ($this->getCustomer($order->customer)) {
-					$data['customerId'] = $order->customer->uid;
+			if ($order->user) {
+				if ($this->getCustomer($order->getCustomer())) {
+					$data['customerId'] = $order->getCustomer()->uid;
 				} else {
 					$data['customer'] = [
-						'firstName' => $order->customer->firstName,
-						'lastName' => $order->customer->lastName,
+						'firstName' => $order->getCustomer()->firstName,
+						'lastName' => $order->getCustomer()->lastName,
 						'email' => $order->email,
 					];
 				}
@@ -789,7 +789,7 @@ class Gateway extends BaseGateway
 		return new SubscriptionResponse($response->subscription);
 	}
 
-	public function getSwitchPlansFormHtml(PlanInterface $originalPlan, PlanInterface $targetPlan): string 
+	public function getSwitchPlansFormHtml(PlanInterface $originalPlan, PlanInterface $targetPlan): string
 	{
 		$view = Craft::$app->getView();
 		$previousMode = $view->getTemplateMode();
@@ -882,7 +882,7 @@ class Gateway extends BaseGateway
 	/**
 	 * @inheritdoc
 	 */
-	public function getBillingIssueDescription(Subscription $subscription): string 
+	public function getBillingIssueDescription(Subscription $subscription): string
 	{
 		return '';
 	}
@@ -890,7 +890,7 @@ class Gateway extends BaseGateway
 	/**
 	 * @inheritdoc
 	 */
-	public function getBillingIssueResolveFormHtml(Subscription $subscription): string 
+	public function getBillingIssueResolveFormHtml(Subscription $subscription): string
 	{
 		throw new NotSupportedException();
 	}
@@ -1063,11 +1063,11 @@ class Gateway extends BaseGateway
 
 		return TemplateHelper::raw($html);
 	}
-	
+
 	public function getExpressCheckoutHtml(array $params = []): string
 	{
 		$request = Craft::$app->getRequest();
-	
+
 		$params = array_merge(
 			[
 				'gateway' => $this,
@@ -1077,7 +1077,7 @@ class Gateway extends BaseGateway
 			],
 			$params
 		);
-	
+
 		$orderId = $request->getParam('number');
 		if ($orderId) {
 			$order = Commerce::getInstance()->getOrders()->getOrderByNumber($orderId);
@@ -1085,13 +1085,13 @@ class Gateway extends BaseGateway
 			$order = Commerce::getInstance()->getCarts()->getCart();
 		}
 		$params['order'] = $order;
-	
+
 		$view = Craft::$app->getView();
 		$previousMode = $view->getTemplateMode();
 		$view->setTemplateMode(View::TEMPLATE_MODE_CP);
-		
+
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/client.min.js");
-		
+
 		if ($params['googlePay'] ?? null) {
 			$view->registerJsFile("https://pay.google.com/gp/p/js/pay.js");
 			$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/google-payment.min.js");
@@ -1102,14 +1102,14 @@ class Gateway extends BaseGateway
 			$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/apple-pay.min.js");
 			$view->registerAssetBundle(ApplePayAsset::class);
 		}
-		
+
 		$html = $view->renderTemplate('commerce-braintree/paymentForms/express-checkout', $params);
-	
+
 		$view->setTemplateMode($previousMode);
-	
+
 		return TemplateHelper::raw($html);
 	}
-	
+
 
 	private function isPaid($status): bool
 	{
