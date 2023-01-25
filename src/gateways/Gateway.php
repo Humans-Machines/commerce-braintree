@@ -494,7 +494,7 @@ class Gateway extends BaseGateway
 				'options' => ['submitForSettlement' => true],
 			];
 
-			if ($order->user) {
+			if ($order->getCustomer()) {
 				if ($this->getCustomer($order->getCustomer())) {
 					$data['customerId'] = $order->getCustomer()->uid;
 				} else {
