@@ -470,8 +470,8 @@ class Gateway extends BaseGateway
 					$data['customerId'] = $order->getCustomer()->uid;
 				} else {
 					$data['customer'] = [
-						'firstName' => $order->getCustomer()->firstName,
-						'lastName' => $order->getCustomer()->lastName,
+						'firstName' => $order->getCustomer()->firstName ?? $order->billingAddress->firstName,
+						'lastName' => $order->getCustomer()->lastName ?? $order->billingAddress->lastName,
 						'email' => $order->email,
 					];
 				}
