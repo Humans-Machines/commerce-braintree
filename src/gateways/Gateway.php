@@ -1056,7 +1056,8 @@ class Gateway extends BaseGateway
 		$view->setTemplateMode(View::TEMPLATE_MODE_CP);
 
 		$view->registerJsFile("https://js.braintreegateway.com/web/dropin/{$this->getDropinUiSDKVersion()}/js/dropin.min.js");
-		$view->registerAssetBundle(DropinUiAsset::class);
+		// Remove default JS implementation
+		// $view->registerAssetBundle(DropinUiAsset::class);
 		$html = $view->renderTemplate('commerce-braintree/paymentForms/dropin-ui', $params);
 
 		$view->setTemplateMode($previousMode);
