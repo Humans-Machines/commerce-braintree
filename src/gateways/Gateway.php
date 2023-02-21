@@ -118,8 +118,8 @@ class Gateway extends BaseGateway
 	{
 		return Craft::t('commerce', 'Braintree');
 	}
-	
-	
+
+
 	public function getSettings(): array
 	{
 		$settings = parent::getSettings();
@@ -129,57 +129,57 @@ class Gateway extends BaseGateway
 		$settings['testMode'] = $this->getTestMode(false);
 		$settings['merchantAccountIds'] = $this->_merchantAccountIds;
 		$settings['googlePayMerchantId'] = $this->getGooglePayMerchantId(false);
-		
+
 		return $settings;
 	}
-	
-	
-	
-	
+
+
+
+
 	public function getTestMode(bool $parse = true): bool|string
 	{
 		return $parse ? App::parseBooleanEnv($this->_testMode) : $this->_testMode;
 	}
-	
+
 	public function setTestMode(bool|string $testMode): void
 	{
 		$this->_testMode = $testMode;
 	}
-	
-	
+
+
 	public function getMerchantId(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_merchantId) : $this->_merchantId;
 	}
-	
+
 	public function setMerchantId(?string $merchantId): void
 	{
 		$this->_merchantId = $merchantId;
 	}
-	
-	
+
+
 	public function getPublicKey(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_publicKey) : $this->_publicKey;
 	}
-	
+
 	public function setPublicKey(?string $publicKey): void
 	{
 		$this->_publicKey = $publicKey;
 	}
-	
-	
+
+
 	public function getPrivateKey(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_privateKey) : $this->_privateKey;
 	}
-	
+
 	public function setPrivateKey(?string $privateKey): void
 	{
 		$this->_privateKey = $privateKey;
 	}
-	
-	
+
+
 	public function getMerchantAccountId(string $currency, bool $parse = true): ?string
 	{
 		if (empty($this->_merchantAccountIds[$currency])) {
@@ -187,31 +187,31 @@ class Gateway extends BaseGateway
 		}
 		return $parse ? App::parseEnv($this->_merchantAccountIds[$currency]) : $this->_merchantAccountIds[$currency];
 	}
-	
+
 	public function setMerchantAccountId(string $currency, ?string $merchantAccountId): void
 	{
 		$this->_merchantAccountIds[$currency] = $merchantAccountId;
 	}
-	
+
 	public function setMerchantAccountIds(array $merchantAccountIds): void
 	{
 		$this->_merchantAccountIds = $merchantAccountIds;
 	}
-	
-	
+
+
 	public function getGooglePayMerchantId(bool $parse = true): ?string
 	{
 		return $parse ? App::parseEnv($this->_googlePayMerchantId) : $this->_googlePayMerchantId;
 	}
-	
+
 	public function setGooglePayMerchantId(?string $googlePayMerchantId): void
 	{
 		$this->_googlePayMerchantId = $googlePayMerchantId;
 	}
-	
-	
-	
-	
+
+
+
+
 
 	/**
 	 * @inheritdoc
@@ -231,7 +231,7 @@ class Gateway extends BaseGateway
 	{
 		//$omnipayGateway = $this->createGateway();
 		$params = [];
-		
+
 		if ($currency) {
 			$params['merchantAccountId'] = $this->getMerchantAccountId($currency);
 		}
@@ -760,7 +760,7 @@ class Gateway extends BaseGateway
 		return new SubscriptionResponse($response->subscription);
 	}
 
-	public function getSwitchPlansFormHtml(PlanInterface $originalPlan, PlanInterface $targetPlan): string 
+	public function getSwitchPlansFormHtml(PlanInterface $originalPlan, PlanInterface $targetPlan): string
 	{
 		$view = Craft::$app->getView();
 		$previousMode = $view->getTemplateMode();
@@ -853,7 +853,7 @@ class Gateway extends BaseGateway
 	/**
 	 * @inheritdoc
 	 */
-	public function getBillingIssueDescription(Subscription $subscription): string 
+	public function getBillingIssueDescription(Subscription $subscription): string
 	{
 		return '';
 	}
@@ -861,7 +861,7 @@ class Gateway extends BaseGateway
 	/**
 	 * @inheritdoc
 	 */
-	public function getBillingIssueResolveFormHtml(Subscription $subscription): string 
+	public function getBillingIssueResolveFormHtml(Subscription $subscription): string
 	{
 		throw new NotSupportedException();
 	}
@@ -1152,7 +1152,7 @@ class Gateway extends BaseGateway
 			'phoneNumber' => preg_replace('/[()\s-]/', '', ($address->phone ?? '')),
 			'streetAddress' => StringHelper::safeTruncate($address->addressLine1, 50),
 			'extendedAddress' => StringHelper::safeTruncate(($address->addressLine2 ?? ''),50),
-			'locality' => StringHelper::safeTruncate($address->locality, 50),
+			'locality' => StringHelper::safeTruncate($address->locality ?? '', 50),
 			'region' => $address->administrativeArea,
 			'postalCode' => $address->postalCode,
 			'countryCodeAlpha2' => $address->countryCode ?? '',
