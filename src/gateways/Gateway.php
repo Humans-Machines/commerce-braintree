@@ -1019,8 +1019,12 @@ class Gateway extends BaseGateway
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/client.min.js");
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/hosted-fields.min.js");
 		$view->registerAssetBundle(HostedFieldsAsset::class);
-		$html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
-
+        try {
+            $html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
+        }catch(\Exception $e)
+        {
+            $html = $e->getMessage();
+        }
 		$view->setTemplateMode($previousMode);
 
 		return $html;
