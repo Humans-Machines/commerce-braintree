@@ -19,7 +19,7 @@ class PaymentResponse implements RequestResponseInterface
     /**
      * @var
      */
-    protected object $data;
+    protected ?object $data = null;
     /**
      * @var string
      */
