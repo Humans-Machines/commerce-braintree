@@ -88,17 +88,19 @@ class Gateway extends BaseGateway
 
 	private array $_merchantAccountIds = [];
 
+	private array $_siteOverrides = [];
+
 	private bool $_sendCartInfo = false;
 
 	private ?string $_googlePayMerchantId = null;
 
 	private ?Braintree\Gateway $gateway = null;
 
-	private ?User $customer = null;
+	private ?Braintree\Customer $customer = null;
 
-	private string $_dropinUiSDKVersion = '1.34.0';
+	private string $_dropinUiSDKVersion = '1.44.1';
 
-	private string $_clientSDKVersion = '3.91.0';
+	private string $_clientSDKVersion = '3.111.0';
 
 	// Public Methods
 	// =========================================================================
@@ -134,6 +136,7 @@ class Gateway extends BaseGateway
 		$settings['privateKey'] = $this->getPrivateKey(false);
 		$settings['testMode'] = $this->getTestMode(false);
 		$settings['merchantAccountIds'] = $this->_merchantAccountIds;
+		$settings['siteOverrides'] = $this->_siteOverrides;
 		$settings['googlePayMerchantId'] = $this->getGooglePayMerchantId(false);
 		$settings['dropinUiSDKVersion'] = $this->getDropinUiSDKVersion(false);
 		$settings['clientSDKVersion'] = $this->getClientSDKVersion(false);
@@ -188,8 +191,15 @@ class Gateway extends BaseGateway
 	}
 
 
-	public function getMerchantAccountId(string $currency, bool $parse = true): ?string
+	public function getMerchantAccountId(string $currency, $site=null, bool $parse = true): ?string
 	{
+		if ($site) {
+			$override = $this->getSiteOverrides($currency, $site->uid)['merchantAccountId'];
+			if ($override != '') {
+				return $parse ? App::parseEnv($override) : $override;
+			}
+		}
+
 		if (empty($this->_merchantAccountIds[$currency])) {
 			return null;
 		}
@@ -204,6 +214,19 @@ class Gateway extends BaseGateway
 	public function setMerchantAccountIds(array $merchantAccountIds): void
 	{
 		$this->_merchantAccountIds = $merchantAccountIds;
+	}
+
+	public function getSiteOverrides(string $currency, string $site, bool $parse = true): ?array
+	{
+		if (empty($this->_siteOverrides[$currency][$site])) {
+			return null;
+		}
+		return $parse ? collect($this->_siteOverrides[$currency][$site])->map(function($o){ return App::parseEnv($o); })->toArray() : $this->_siteOverrides[$currency][$site];
+	}
+
+	public function setSiteOverrides(array $siteOverrides): void
+	{
+		$this->_siteOverrides = $siteOverrides;
 	}
 
 
@@ -256,13 +279,13 @@ class Gateway extends BaseGateway
 		}
 	}
 
-	public function getToken($user = null, $currency = null): string
+	public function getToken($user = null, $currency = null, $site=null): string
 	{
 		//$omnipayGateway = $this->createGateway();
 		$params = [];
 
 		if ($currency) {
-			$params['merchantAccountId'] = $this->getMerchantAccountId($currency);
+			$params['merchantAccountId'] = $this->getMerchantAccountId($currency, $site);
 		}
 		if ($user) {
 			try {
@@ -308,7 +331,7 @@ class Gateway extends BaseGateway
 		//Craft::dd($request);
 	}*/
 
-	public function getCustomer($user): ?User
+	public function getCustomer($user): ?Braintree\Customer
 	{
 		if (!$this->customer) {
 			try {
@@ -385,7 +408,10 @@ class Gateway extends BaseGateway
 			} elseif ($form->token) {
 				$data['paymentMethodToken'] = $form->token;
 			}
-			if ($merchantAccountId = $this->getMerchantAccountId($transaction->currency)) {
+			if ($form->deviceData) {
+				$data['deviceData'] = $form->deviceData;
+			}
+			if ($merchantAccountId = $this->getMerchantAccountId($transaction->currency, $order->orderSite)) {
 				$data['merchantAccountId'] = $merchantAccountId;
 			} else {
 				$data['merchantAccountId'] = "";
@@ -494,13 +520,13 @@ class Gateway extends BaseGateway
 				'options' => ['submitForSettlement' => true],
 			];
 
-			if ($order->getCustomer()) {
-				if ($this->getCustomer($order->getCustomer())) {
-					$data['customerId'] = $order->getCustomer()->uid;
+			if ($order->customer) {
+				if ($this->getCustomer($order->customer)) {
+					$data['customerId'] = $order->customer->uid;
 				} else {
 					$data['customer'] = [
-						'firstName' => $order->getCustomer()->firstName ?? $order->billingAddress->firstName,
-						'lastName' => $order->getCustomer()->lastName ?? $order->billingAddress->lastName,
+						'firstName' => $order->customer->firstName,
+						'lastName' => $order->customer->lastName,
 						'email' => $order->email,
 					];
 				}
@@ -517,7 +543,10 @@ class Gateway extends BaseGateway
 			} elseif ($form->token) {
 				$data['paymentMethodToken'] = $form->token;
 			}
-			if ($merchantAccountId = $this->getMerchantAccountId($transaction->currency)) {
+			if ($form->deviceData) {
+				$data['deviceData'] = $form->deviceData;
+			}
+			if ($merchantAccountId = $this->getMerchantAccountId($transaction->currency, $order->orderSite)) {
 				$data['merchantAccountId'] = $merchantAccountId;
 			} else {
 				$data['merchantAccountId'] = "";
@@ -1019,12 +1048,8 @@ class Gateway extends BaseGateway
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/client.min.js");
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/hosted-fields.min.js");
 		$view->registerAssetBundle(HostedFieldsAsset::class);
-        try {
-            $html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
-        }catch(\Exception $e)
-        {
-            $html = $e->getMessage();
-        }
+		$html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
+
 		$view->setTemplateMode($previousMode);
 
 		return $html;
@@ -1163,7 +1188,7 @@ class Gateway extends BaseGateway
 		$subscription = Subscription::find()->reference($data->id)->one();
 
 		if (!$subscription) {
-			Craft::warning('Subscription with the reference “' .$subscription->id .'” not found when processing Braintree webhook');
+			Craft::warning('Subscription with the reference “' . $data->id . '” not found when processing Braintree webhook');
 
 			return;
 		}
@@ -1189,7 +1214,7 @@ class Gateway extends BaseGateway
 
 		$defaultPaymentCurrency = Commerce::getInstance()->getPaymentCurrencies()->getPrimaryPaymentCurrency();
 		$currency = Commerce::getInstance()->getCurrencies()->getCurrencyByIso($defaultPaymentCurrency->iso);
-		$payment = $this->_createSubscriptionPayment($data, $currency->alphabeticCode);
+		$payment = $this->_createSubscriptionPayment($data, $currency);
 
 		Commerce::getInstance()->getSubscriptions()->receivePayment($subscription, $payment, $data->nextBillingDate);
 	}
@@ -1232,7 +1257,7 @@ class Gateway extends BaseGateway
 			'phoneNumber' => preg_replace('/[()\s-]/', '', ($address->phone ?? '')),
 			'streetAddress' => StringHelper::safeTruncate($address->addressLine1, 50),
 			'extendedAddress' => StringHelper::safeTruncate(($address->addressLine2 ?? ''),50),
-			'locality' => StringHelper::safeTruncate($address->locality ?? '', 50),
+			'locality' => StringHelper::safeTruncate($address->locality, 50),
 			'region' => $address->administrativeArea,
 			'postalCode' => $address->postalCode,
 			'countryCodeAlpha2' => $address->countryCode ?? '',

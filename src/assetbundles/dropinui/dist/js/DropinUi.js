@@ -18,7 +18,7 @@
 			setTimeout(check, 50);
 		}
 	})();
-	
+
 	window.commerceBT = {
 		callbacks:{},
 		methodSelected:false,
@@ -51,6 +51,7 @@
 				var options = {
 					authorization: $token.value,
 					container: $dropinUi,
+					dataCollector: true,
 					locale: $dropinUi.dataset.locale,
 					vaultManager: $dropinUi.dataset.manage,
 					card: {
@@ -117,7 +118,7 @@
 						}
 						return;
 					}
-					
+
 					if ($submit.dataset.manual) {
 						$submit.dataset.loading = false;
 					} else {
@@ -135,7 +136,6 @@
 						}
 					});
 					dropinInstance.on('noPaymentMethodRequestable', function(e) {
-						// processing($submit);						
 						disable($submit);
 					});
 					dropinInstance.on('paymentOptionSelected', function(e) {
@@ -188,6 +188,7 @@
 			if ((payload.liabilityShiftPossible && payload.liabilityShifted) || !payload.liabilityShiftPossible || payload.type !== 'CreditCard' || !threeDSecure) {
 				processing($submit);
 				$form.querySelector('input[name*=nonce]').value = payload.nonce;
+				$form.querySelector('input[name*=deviceData]').value = payload.deviceData;
 				$form.removeEventListener('submit', formSubmit);
 				window.commerceBT.methodSelected = true;
 				if (window.commerceBT.callbacks.hasOwnProperty('onPaymentMethodReady')) {
@@ -210,7 +211,11 @@
 	}
 	function reset($button) {
 		$button.disabled = false;
-		$button.innerHTML = $button.dataset.text;
+		if ($button.dataset.manual) {
+			$button.dataset.processing = false;
+		} else {
+			$button.innerHTML = $button.dataset.text;
+		}
 	}
 	function processing($button) {
 		$button.disabled = true;
