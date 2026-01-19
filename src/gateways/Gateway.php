@@ -1252,14 +1252,14 @@ class Gateway extends BaseGateway
 		}
 
 		return [
-			'givenName' => $address->firstName,
-			'surname' => $address->lastName,
+			'givenName' => $address->firstName ?? '',
+			'surname' => $address->lastName ?? '',
 			'phoneNumber' => preg_replace('/[()\s-]/', '', ($address->phone ?? '')),
-			'streetAddress' => StringHelper::safeTruncate($address->addressLine1, 50),
-			'extendedAddress' => StringHelper::safeTruncate(($address->addressLine2 ?? ''),50),
-			'locality' => StringHelper::safeTruncate($address->locality, 50),
-			'region' => $address->administrativeArea,
-			'postalCode' => $address->postalCode,
+			'streetAddress' => StringHelper::safeTruncate($address->addressLine1 ?? '', 50),
+			'extendedAddress' => StringHelper::safeTruncate($address->addressLine2 ?? '', 50),
+			'locality' => StringHelper::safeTruncate($address->locality ?? '', 50),
+			'region' => $address->administrativeArea ?? '',
+			'postalCode' => $address->postalCode ?? '',
 			'countryCodeAlpha2' => $address->countryCode ?? '',
 		];
 	}
