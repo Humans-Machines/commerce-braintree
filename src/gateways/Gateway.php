@@ -1070,7 +1070,14 @@ class Gateway extends BaseGateway
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/client.min.js");
 		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/hosted-fields.min.js");
 		$view->registerAssetBundle(HostedFieldsAsset::class);
-		$html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
+
+		try {
+			$html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
+		} catch (\craft\commerce\errors\PaymentException $e) {
+			$view->setTemplateMode($previousMode);
+			$merchantIdPrefix = substr($this->getMerchantId(), 0, 5);
+			return '<div class="error" style="padding: 10px; color: #cf1124;">⚠️ Gateway unavailable (merchantId: ' . $merchantIdPrefix . '...): ' . $e->getMessage() . '</div>';
+		}
 
 		$view->setTemplateMode($previousMode);
 
