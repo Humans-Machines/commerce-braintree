@@ -304,9 +304,22 @@ class Gateway extends BaseGateway
 			}
 			$params['customerId'] = $user->uid;
 		}
-		$token = $this->gateway->clientToken($params)->generate($params);
-
-		return $token;
+		try {
+			$token = $this->gateway->clientToken($params)->generate($params);
+			return $token;
+		} catch (\Braintree\Exception\Authentication $e) {
+			$merchantIdPrefix = substr($this->getMerchantId(), 0, 5);
+			\Craft::error("Braintree Authentication failed (merchantId: {$merchantIdPrefix}...). Check your API credentials (merchantId, publicKey, privateKey).", 'commerce-braintree');
+			throw new \craft\commerce\errors\PaymentException("Payment gateway authentication failed (merchantId: {$merchantIdPrefix}...). Please contact support.");
+		} catch (\Braintree\Exception\Authorization $e) {
+			$merchantIdPrefix = substr($this->getMerchantId(), 0, 5);
+			\Craft::error("Braintree Authorization failed (merchantId: {$merchantIdPrefix}...). Your API key may not have the required permissions.", 'commerce-braintree');
+			throw new \craft\commerce\errors\PaymentException("Payment gateway authorization failed (merchantId: {$merchantIdPrefix}...). Please contact support.");
+		} catch (\Exception $e) {
+			$merchantIdPrefix = substr($this->getMerchantId(), 0, 5);
+			\Craft::error("Braintree client token generation failed (merchantId: {$merchantIdPrefix}...): " . $e->getMessage(), 'commerce-braintree');
+			throw new \craft\commerce\errors\PaymentException("Payment gateway unavailable (merchantId: {$merchantIdPrefix}...). Please try again later.");
+		}
 	}
 
 	/**
