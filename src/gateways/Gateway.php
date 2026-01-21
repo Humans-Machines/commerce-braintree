@@ -272,10 +272,19 @@ class Gateway extends BaseGateway
 	{
 		$request = Craft::$app->getRequest();
 
-		if ($request->isCpRequest) {
-			return $this->getCpPaymentFormHtml($params);
-		} else {
-			return $this->getSitePaymentFormHtml($params);
+		try {
+			if ($request->isCpRequest) {
+				return $this->getCpPaymentFormHtml($params);
+			} else {
+				return $this->getSitePaymentFormHtml($params);
+			}
+		} catch (\craft\commerce\errors\PaymentException $e) {
+			// Gateway not available - show error message in CP, hide in frontend
+			if ($request->isCpRequest) {
+				$merchantIdPrefix = substr($this->getMerchantId(), 0, 5);
+				return '<div class="error" style="padding: 10px; color: #cf1124;">⚠️ Gateway unavailable (merchantId: ' . $merchantIdPrefix . '...): ' . $e->getMessage() . '</div>';
+			}
+			return '';
 		}
 	}
 
