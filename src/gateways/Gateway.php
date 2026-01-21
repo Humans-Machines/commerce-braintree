@@ -1067,17 +1067,20 @@ class Gateway extends BaseGateway
 		$previousMode = $view->getTemplateMode();
 		$view->setTemplateMode(View::TEMPLATE_MODE_CP);
 
-		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/client.min.js");
-		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/hosted-fields.min.js");
-		$view->registerAssetBundle(HostedFieldsAsset::class);
-
+		// Pre-check: Test if gateway credentials are valid before rendering template
 		try {
-			$html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
-		} catch (\craft\commerce\errors\PaymentException $e) {
+			$this->getToken();
+		} catch (\Exception $e) {
 			$view->setTemplateMode($previousMode);
 			$merchantIdPrefix = substr($this->getMerchantId(), 0, 5);
 			return '<div class="error" style="padding: 10px; color: #cf1124;">⚠️ Gateway unavailable (merchantId: ' . $merchantIdPrefix . '...): ' . $e->getMessage() . '</div>';
 		}
+
+		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/client.min.js");
+		$view->registerJsFile("https://js.braintreegateway.com/web/{$this->getClientSDKVersion()}/js/hosted-fields.min.js");
+		$view->registerAssetBundle(HostedFieldsAsset::class);
+
+		$html = $view->renderTemplate('commerce-braintree/paymentForms/hosted-fields', $params);
 
 		$view->setTemplateMode($previousMode);
 
